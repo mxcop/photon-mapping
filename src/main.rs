@@ -57,7 +57,7 @@ fn main() {
         let phi: f32 = theta + (rng.gen::<f32>() * PI - PI * 0.5);
         let pd = Vec2::new(phi.cos(), phi.sin());
 
-        let ray = Ray::new(po + pd * 0.01, pd);
+        let ray = Ray::new(po + pd * 0.01, pd.normalize());
 
         let hit = floor.intersect_ray(ray);
         if let Some(t) = hit {
@@ -73,16 +73,19 @@ fn main() {
         }
     }
 
+    let scale = (1.0 / PHOTONS as f32) * 256.0;
+
     // Render once.
     for (i, c) in buffer.iter_mut().enumerate() {
         /* Partition the index into cartesian coordinates */
         let p = Vec2::new((i % WIDTH) as f32, (i / WIDTH) as f32);
 
         let mut flux = Vec3::new(0.0, 0.0, 0.0);
+        let normal = Vec2::new(0.0, 1.0);
         for ev in &photon_map {
             // If this event is relevant to this pixel.
             if ev.p.distance(p) < 1.0 {
-                flux += ev.c / PHOTONS as f32 * 256.0;
+                flux += ev.c * normal.dot(ev.i).max(0.0) * scale;
             }
         }
 
